@@ -6,7 +6,7 @@ import KButton from '@/components/KButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentHousehold } from '@/hooks/useCurrentHousehold';
 import { useHouseholdMembers } from '@/hooks/useHouseholdMembers';
-import { regenerateInviteCode, joinHouseholdByCode } from '@/db/households';
+import { regenerateInviteCode, joinHouseholdByCode, initHouseholdForNewUser } from '@/db/households';
 import { TabType } from '@/components/TabBar';
 import { supabase } from '@/services/supabase';
 
@@ -29,6 +29,8 @@ export function Profile() {
   const [repairCode, setRepairCode] = useState('');
   const [repairing, setRepairing] = useState(false);
   const [repairError, setRepairError] = useState<string | null>(null);
+  const [creatingHousehold, setCreatingHousehold] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ firstName: string; lastName: string } | null>(null);
 
   useEffect(() => {
@@ -133,6 +135,25 @@ export function Profile() {
     }
   };
 
+  const handleCreateHousehold = async () => {
+    if (!user || !userProfile) return;
+
+    setCreatingHousehold(true);
+    setCreateError(null);
+    try {
+      const result = await initHouseholdForNewUser(user.id, null, undefined);
+      if (result.error) {
+        setCreateError(result.error);
+      } else {
+        await refresh();
+      }
+    } catch (error: any) {
+      setCreateError(error.message || 'Erreur lors de la création du foyer');
+    } finally {
+      setCreatingHousehold(false);
+    }
+  };
+
   return (
     <MainLayout onTabChange={handleTabChange}>
       <div className="space-y-6">
@@ -142,31 +163,49 @@ export function Profile() {
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
             <p className="text-sm text-red-600 mb-3">{householdError}</p>
             {householdError.includes('Aucun foyer trouvé') && (
-              <div className="space-y-3 mt-4 pt-4 border-t border-red-200">
-                <p className="text-sm text-gray-700 font-medium">
-                  Rejoindre un foyer existant :
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Code foyer"
-                    value={repairCode}
-                    onChange={(e) => setRepairCode(e.target.value)}
-                    disabled={repairing}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-k-orange disabled:opacity-50"
-                  />
+              <>
+                <div className="space-y-3 mt-4 pt-4 border-t border-red-200">
+                  <p className="text-sm text-gray-700 font-medium">
+                    Créer un nouveau foyer :
+                  </p>
                   <KButton
-                    onClick={handleRepairAccount}
-                    disabled={repairing || !repairCode.trim()}
-                    className="whitespace-nowrap"
+                    onClick={handleCreateHousehold}
+                    disabled={creatingHousehold || !userProfile}
+                    className="w-full"
                   >
-                    {repairing ? 'Rattachement...' : 'Rejoindre'}
+                    {creatingHousehold ? 'Création...' : 'Créer mon foyer'}
                   </KButton>
+                  {createError && (
+                    <p className="text-sm text-red-600">{createError}</p>
+                  )}
                 </div>
-                {repairError && (
-                  <p className="text-sm text-red-600">{repairError}</p>
-                )}
-              </div>
+
+                <div className="space-y-3 mt-4 pt-4 border-t border-red-200">
+                  <p className="text-sm text-gray-700 font-medium">
+                    Ou rejoindre un foyer existant :
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Code foyer"
+                      value={repairCode}
+                      onChange={(e) => setRepairCode(e.target.value)}
+                      disabled={repairing}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-k-orange disabled:opacity-50"
+                    />
+                    <KButton
+                      onClick={handleRepairAccount}
+                      disabled={repairing || !repairCode.trim()}
+                      className="whitespace-nowrap"
+                    >
+                      {repairing ? 'Rattachement...' : 'Rejoindre'}
+                    </KButton>
+                  </div>
+                  {repairError && (
+                    <p className="text-sm text-red-600">{repairError}</p>
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}

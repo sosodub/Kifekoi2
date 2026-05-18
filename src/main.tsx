@@ -5,23 +5,31 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { useMembersStore } from './features/members/store';
+import { isSupabaseConfigured } from './services/supabase';
+import ConfigError from './components/ConfigError';
 
-const initializeDefaultMembers = () => {
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+
+if (!isSupabaseConfigured) {
+  root.render(
+    <React.StrictMode>
+      <ConfigError />
+    </React.StrictMode>,
+  );
+} else {
   const store = useMembersStore.getState();
   if (store.members.length === 0) {
     store.addMember('Moi', '👤');
     store.addMember('Enfant', '👶');
   }
-};
 
-initializeDefaultMembers();
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
-);
+  root.render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </React.StrictMode>,
+  );
+}
