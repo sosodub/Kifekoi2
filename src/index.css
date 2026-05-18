@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #E8F5E9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 0; }
+  16.6% { opacity: 1; }
+  33.3% { opacity: 0; }
+  50% { opacity: 1; }
+  66.6% { opacity: 0; }
+  83.3% { opacity: 1; }
+}
+
+@keyframes pop1 {
+  0% { transform: scale(0); opacity: 0; }
+  10% { transform: scale(1.5); opacity: 1; }
+  20% { transform: scale(1); opacity: 1; }
+  30% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes pop2 {
+  0%, 33% { transform: scale(0); opacity: 0; }
+  43% { transform: scale(1.5); opacity: 1; }
+  53% { transform: scale(1); opacity: 1; }
+  63% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes pop3 {
+  0%, 66% { transform: scale(0); opacity: 0; }
+  76% { transform: scale(1.5); opacity: 1; }
+  86% { transform: scale(1); opacity: 1; }
+  96% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.animate-flash {
+  animation: flash 4s ease-in-out;
+}
+
+.animate-pop-1 {
+  animation: pop1 4s ease-in-out;
+}
+
+.animate-pop-2 {
+  animation: pop2 4s ease-in-out;
+}
+
+.animate-pop-3 {
+  animation: pop3 4s ease-in-out;
+}
+
+@keyframes confettiPop {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx, 0), var(--ty, 0)) rotate(720deg) scale(0);
+    opacity: 0;
+  }
+}
