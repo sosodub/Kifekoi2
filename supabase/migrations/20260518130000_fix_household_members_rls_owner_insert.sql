@@ -30,28 +30,39 @@ DROP POLICY IF EXISTS household_members_delete ON public.household_members;
 
 ALTER TABLE public.household_members ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "members_insert"
+CREATE OR REPLACE FUNCTION public.user_household_ids()
+RETURNS SETOF uuid
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT household_id FROM public.household_members WHERE user_id = auth.uid();
+$$;
+
+REVOKE ALL ON FUNCTION public.user_household_ids() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.user_household_ids() TO authenticated;
+
+CREATE POLICY members_insert
   ON public.household_members FOR INSERT TO authenticated
   WITH CHECK (
     auth.uid() = user_id
     OR auth.uid() = (SELECT owner_id FROM public.households WHERE id = household_id)
   );
 
-CREATE POLICY "members_select"
+CREATE POLICY members_select
   ON public.household_members FOR SELECT TO authenticated
   USING (
     auth.uid() = user_id
     OR auth.uid() = (SELECT owner_id FROM public.households WHERE id = household_id)
-    OR household_id IN (
-      SELECT household_id FROM public.household_members WHERE user_id = auth.uid()
-    )
+    OR household_id IN (SELECT public.user_household_ids())
   );
 
-CREATE POLICY "members_update"
+CREATE POLICY members_update
   ON public.household_members FOR UPDATE TO authenticated
   USING (auth.uid() = (SELECT owner_id FROM public.households WHERE id = household_id))
   WITH CHECK (auth.uid() = (SELECT owner_id FROM public.households WHERE id = household_id));
 
-CREATE POLICY "members_delete"
+CREATE POLICY members_delete
   ON public.household_members FOR DELETE TO authenticated
   USING (auth.uid() = (SELECT owner_id FROM public.households WHERE id = household_id));
